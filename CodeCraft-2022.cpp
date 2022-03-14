@@ -9,7 +9,7 @@
 #include <algorithm>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=0;
+const bool is_local=1;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -33,7 +33,7 @@ vector<string> splitByCom(string data,char c){
 void inputData(){
     string in_path;
     if(is_local){
-        //in_path="/home/asc/huaweicode2022/smallData/";
+        //in_path="/Users/ylf9811/Downloads/huaweicode2022/smallData/";
         in_path="/Users/ylf9811/Downloads/huaweicode2022/data/";
     }else{
         in_path="/data/";
@@ -43,14 +43,10 @@ void inputData(){
     string infile3="qos.csv";
     string infile4="config.ini";
     string inname=in_path+infile1;
-    ifstream instrm1(inname.c_str());
     string line_data;
     //=================================================================
-    if(!instrm1){
-        printf("open file1 fail\n");
-        while(1){}
-    }
-    instrm1>>line_data;
+    freopen(inname.c_str(),"r",stdin);
+    cin>>line_data;
     vector<string>tableTitle=splitByCom(line_data,',');
     M=0;
     for(int i=1;i<tableTitle.size();i++){
@@ -59,41 +55,35 @@ void inputData(){
         M++;
     }
     T=0;
-    while(instrm1>>line_data){
+    while(cin>>line_data){
         vector<string>res=splitByCom(line_data,',');
         for(int i=1;i<res.size();i++){
             G[T].push_back(stoi(res[i]));
         }
         T++;
     }
-    instrm1.close();
+    fclose(stdin);
+    cin.clear();
     //=============================================================
     inname=in_path+infile2;
-    ifstream instrm2(inname.c_str());
-    if(!instrm2){
-        printf("open file2 fail\n");
-        while(1){}
-    }
-    instrm2>>line_data;
+    freopen(inname.c_str(),"r",stdin);
+    cin>>line_data;
     N=0;
-    while(instrm2>>line_data){
+    while(cin>>line_data){
         vector<string>res=splitByCom(line_data,',');
         mp_nodes[res[0]]=N;
         nodes_name[N]=res[0];
         nodes_val[N]=stoi(res[1]);
         N++;
     }
-    instrm2.close();
+    fclose(stdin);
+    cin.clear();
     //=============================================================
     inname=in_path+infile3;
-    fstream instrm3(inname.c_str());
-    if(!instrm3){
-        printf("open file3 fail\n");
-        while(1){}
-    }
-    instrm3>>line_data;
+    freopen(inname.c_str(),"r",stdin);
+    cin>>line_data;
     tableTitle=splitByCom(line_data,',');
-    while(instrm3>>line_data){
+    while(cin>>line_data){
         vector<string>res=splitByCom(line_data,',');
         for(int i=1;i<res.size();i++){
             int uid=mp_users[tableTitle[i]];
@@ -101,19 +91,17 @@ void inputData(){
             dis[uid][nid]=stoi(res[i]);
         }
     }
-    instrm3.close();
-
+    fclose(stdin);
+    cin.clear();
     //=============================================================
     inname=in_path+infile4;
-    fstream instrm4(inname.c_str());
-    if(!instrm4){
-        printf("open file4 fail\n");
-        while(1){}
-    }
-    instrm4>>line_data;
-    instrm4>>line_data;
+    freopen(inname.c_str(),"r",stdin);
+    cin>>line_data;
+    cin>>line_data;
     DIS=stoi(splitByCom(line_data,'=')[1]);
-    instrm4.close();
+    fclose(stdin);
+
+    cin.clear();
     if(is_debug){
         printf("DIS %d\n",DIS);
         printf("TABLE: \n");
@@ -184,7 +172,7 @@ vector<string>Sol(vector<int>users_val){
     }
     for(int i=0;i<M;i++){
         for(int j=0;j<N;j++){
-            if(dis[i][j]<=DIS){
+            if(dis[i][j]<DIS){
                 addEdge(i+1,j+M+1,users_val[i]);
                 addEdge(j+M+1,i+1,0);
             }
@@ -199,6 +187,7 @@ vector<string>Sol(vector<int>users_val){
     ll tar=0;
     for(int i=0;i<M;i++)tar+=users_val[i];
     if(is_debug)printf("ANS %lld %lld\n",res,tar);
+    if(res!=tar)while(1){}
     for(int u=0;u<M;u++){
         string pat=users_name[u]+":";
         vector<string>tmp;
@@ -235,10 +224,14 @@ int main() {
             for(auto it:res)printf("%s\n",it.c_str());
             printf("---------------------------\n");
         }
-        for(auto it:res){
-            outstrm<<it<<"\n";
+        for(int i=0;i<res.size()-1;i++){
+            outstrm<<res[i]<<"\n";
         }
-    }     
+        outstrm<<res[res.size()-1];
+        if(tt!=T-1)outstrm<<"\n";
+    }
+
     outstrm.close();
     return 0;
 }
+
