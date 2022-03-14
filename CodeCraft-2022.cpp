@@ -5,6 +5,11 @@
 #include <sstream>
 #include <map>
 #include <vector>
+#include <queue>
+#include <algorithm>
+#define ll long long
+const bool is_debug=0;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -15,7 +20,6 @@ int nodes_val[500];
 int dis[500][500];
 int DIS;
 int T,M,N;
-int node_cost[500][10010];
 
 vector<string> splitByCom(string data,char c){
     vector<string>res;
@@ -27,19 +31,26 @@ vector<string> splitByCom(string data,char c){
     return res;
 }
 void inputData(){
-    string in_path="/Users/ylf9811/Downloads/huaweicode2022/smallData/";
-    string out_path="/Users/ylf9811/Downloads/huaweicode2022/smallData/";
+    string in_path;
+    if(is_local){
+        //in_path="/home/asc/huaweicode2022/smallData/";
+        in_path="/Users/ylf9811/Downloads/huaweicode2022/data/";
+    }else{
+        in_path="/data/";
+    }
     string infile1="demand.csv";
     string infile2="site_bandwidth.csv";
     string infile3="qos.csv";
     string infile4="config.ini";
     string inname=in_path+infile1;
-    printf("in %s\n",inname.c_str());
-    ifstream instrm;
+    ifstream instrm1(inname.c_str());
     string line_data;
     //=================================================================
-    instrm.open(inname, ios::out | ios::in );
-    instrm>>line_data;
+    if(!instrm1){
+        printf("open file1 fail\n");
+        while(1){}
+    }
+    instrm1>>line_data;
     vector<string>tableTitle=splitByCom(line_data,',');
     M=0;
     for(int i=1;i<tableTitle.size();i++){
@@ -48,33 +59,41 @@ void inputData(){
         M++;
     }
     T=0;
-    while(instrm>>line_data){
+    while(instrm1>>line_data){
         vector<string>res=splitByCom(line_data,',');
         for(int i=1;i<res.size();i++){
             G[T].push_back(stoi(res[i]));
         }
         T++;
     }
-    instrm.close();
+    instrm1.close();
     //=============================================================
     inname=in_path+infile2;
-    instrm.open(inname, ios::out | ios::in );
-    instrm>>line_data;
+    ifstream instrm2(inname.c_str());
+    if(!instrm2){
+        printf("open file2 fail\n");
+        while(1){}
+    }
+    instrm2>>line_data;
     N=0;
-    while(instrm>>line_data){
+    while(instrm2>>line_data){
         vector<string>res=splitByCom(line_data,',');
         mp_nodes[res[0]]=N;
         nodes_name[N]=res[0];
         nodes_val[N]=stoi(res[1]);
         N++;
     }
-    instrm.close();
+    instrm2.close();
     //=============================================================
     inname=in_path+infile3;
-    instrm.open(inname, ios::out | ios::in );
-    instrm>>line_data;
+    fstream instrm3(inname.c_str());
+    if(!instrm3){
+        printf("open file3 fail\n");
+        while(1){}
+    }
+    instrm3>>line_data;
     tableTitle=splitByCom(line_data,',');
-    while(instrm>>line_data){
+    while(instrm3>>line_data){
         vector<string>res=splitByCom(line_data,',');
         for(int i=1;i<res.size();i++){
             int uid=mp_users[tableTitle[i]];
@@ -82,62 +101,144 @@ void inputData(){
             dis[uid][nid]=stoi(res[i]);
         }
     }
-    instrm.close();
+    instrm3.close();
 
     //=============================================================
     inname=in_path+infile4;
-    instrm.open(inname, ios::out | ios::in );
-    instrm>>line_data;
-    instrm>>line_data;
+    fstream instrm4(inname.c_str());
+    if(!instrm4){
+        printf("open file4 fail\n");
+        while(1){}
+    }
+    instrm4>>line_data;
+    instrm4>>line_data;
     DIS=stoi(splitByCom(line_data,'=')[1]);
-    instrm.close();
-    printf("DIS %d\n",DIS);
-    printf("TABLE: \n");
-    for(int i=0;i<N;i++)printf("%s ",nodes_name[i].c_str());
-    printf("\n");
-    for(int i=0;i<M;i++)printf("%s ",users_name[i].c_str());
-    printf("\n");
-    printf("================================\n");
-    for(int i=0;i<M;i++){
-        for(int j=0;j<N;j++)
-            printf("%d ",dis[i][j]);
+    instrm4.close();
+    if(is_debug){
+        printf("DIS %d\n",DIS);
+        printf("TABLE: \n");
+        for(int i=0;i<N;i++)printf("%s ",nodes_name[i].c_str());
         printf("\n");
+        for(int i=0;i<M;i++)printf("%s ",users_name[i].c_str());
+        printf("\n");
+        printf("================================\n");
+        for(int i=0;i<M;i++){
+            for(int j=0;j<N;j++)
+                printf("%d ",dis[i][j]);
+            printf("\n");
+        }
+        printf("================================\n");
     }
-    printf("================================\n");
-
 }
-vector<int>Sol(vector<int>users_val,vector<int>users_sort){
-    vector<int>res;
-    int las[500];
-    for(int i=0;i<N;i++)las[i]=nodes_val[i];
-    for(int i=0;i<M;i++){
-
-
-
+struct edge{
+    int v,t,pre;
+}e[500*500];
+int num,head[500],ord[500],Tn;
+void addEdge(int from,int to,int val){
+    e[num].v=to;
+    e[num].t=val;
+    e[num].pre=head[from];
+    head[from]=num++;
+}
+bool Bfs(){
+    for(int i=0;i<Tn;i++)ord[i]=-1;
+    queue<int>Q;
+    Q.push(0);
+    ord[0]=0;
+    while(!Q.empty()){
+        int now=Q.front();
+        Q.pop();
+        for(int i=head[now];i!=-1;i=e[i].pre){
+            if(e[i].t>0&&ord[e[i].v]==-1){
+                Q.push(e[i].v);
+                ord[e[i].v]=ord[now]+1;
+                if(e[i].v==Tn-1)return 1;
+            }
+        }
     }
-    return res;
+    return 0;
+}
+ll Dfs(int now,ll nowflow){
+    if(now==Tn-1)return nowflow;
+    int totflow=0;
+    for(int i=head[now];i!=-1;i=e[i].pre){
+        if(ord[e[i].v]==ord[now]+1&&e[i].t>0){
+            int canflow=Dfs(e[i].v,min(nowflow,1ll*e[i].t));
+            e[i].t-=canflow;
+            e[i^1].t+=canflow;
+            totflow+=canflow;
+            nowflow-=canflow;
+            if(nowflow<=0)break;
+        }
+    }
+    return totflow;
+}
+vector<string>Sol(vector<int>users_val){
+    vector<string>ansPath;
+    num=0;
+    Tn=N+M+2;
+    for(int i=0;i<Tn;i++)head[i]=-1;
+    for(int i=0;i<M;i++){
+        addEdge(0,i+1,users_val[i]);
+        addEdge(i+1,0,0);
+    }
+    for(int i=0;i<M;i++){
+        for(int j=0;j<N;j++){
+            if(dis[i][j]<=DIS){
+                addEdge(i+1,j+M+1,users_val[i]);
+                addEdge(j+M+1,i+1,0);
+            }
+        }
+    }
+    for(int i=0;i<N;i++){
+        addEdge(i+M+1,Tn-1,nodes_val[i]);
+        addEdge(Tn-1,i+M+1,0);
+    }
+    ll res=0;
+    while(Bfs())res+=Dfs(0,1e15);
+    ll tar=0;
+    for(int i=0;i<M;i++)tar+=users_val[i];
+    if(is_debug)printf("ANS %lld %lld\n",res,tar);
+    for(int u=0;u<M;u++){
+        string pat=users_name[u]+":";
+        vector<string>tmp;
+        for(int i=head[u+1];i!=-1;i=e[i].pre){
+            if(e[i^1].t>0){
+                tmp.push_back("<"+nodes_name[e[i].v-1-M]+","+to_string(e[i^1].t)+">");
+            }
+        }
+        if(tmp.size()){
+            for(int i=0;i<tmp.size()-1;i++){
+                pat+=tmp[i]+",";
+            }
+            pat+=tmp[tmp.size()-1];
+        }
+        ansPath.push_back(pat);
+    }
+    return ansPath;
 }
 int main() {
     inputData();    
-    vector<pair<int,int>>users_sort;
-    for(int i=0;i<M;i++){
-        int cnt=0;
-        for(int j=0;j<N;j++)
-            if(dis[i][j]<=DIS)cnt++;
-        users_sort.push_back(make_pair(cnt,i));
+    ofstream outstrm;
+    if(is_local){
+        outstrm.open("/Users/ylf9811/Downloads/huaweicode2022/solution.txt");
+    }else{
+        outstrm.open("/output/solution.txt");
     }
-    sort(users_sort.begin(),users_sort.end());
-    vector<int>users_sorted;
-    for(auto it:users_sort)users_sorted.push_back(it.second);
-    printf("--------------------------------\n");
-    printf("sort users:\n");
-    for(auto it:users_sort){
-        printf("%d %d\n",it.second,it.first);
+    if(!outstrm){
+        printf("open out file fail\n");
     }
-
-    printf("--------------------------------\n");
     for(int tt=0;tt<T;tt++){
-        vector<int>res=Sol(G[tt],users_sorted);
+        vector<string>res=Sol(G[tt]);
+        if(is_debug){
+            printf("---------------------------\n");
+            for(auto it:res)printf("%s\n",it.c_str());
+            printf("---------------------------\n");
+        }
+        for(auto it:res){
+            outstrm<<it<<"\n";
+        }
     }     
+    outstrm.close();
     return 0;
 }
