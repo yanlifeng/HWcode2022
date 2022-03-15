@@ -8,10 +8,11 @@
 #include <queue>
 #include <algorithm>
 #include <ctime>
+#include <cmath>
 #include <cstdlib>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=0;
+const bool is_local=1;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -124,6 +125,7 @@ struct edge{
     int v,t,pre;
 }e[500*500];
 int num,head[500],ord[500],Tn,randVal[500];
+vector<int>Co[500];
 int myrandom (int i) { return std::rand()%i;}
 void addEdge(int from,int to,int val){
     e[num].v=to;
@@ -142,8 +144,8 @@ bool Bfs(){
         vector<pair<int,int>>Ei;
         for(int i=head[now];i!=-1;i=e[i].pre)
             Ei.push_back(make_pair(-1*randVal[e[i].v],i));
-        //random_shuffle ( Ei.begin(), Ei.end(), myrandom);
-        sort(Ei.begin(),Ei.end());
+        //random_shuffle(Ei.begin(),Ei.end(),myrandom);
+        //sort(Ei.begin(),Ei.end());
         for(auto it:Ei){
             int i=it.second;
             if(e[i].t>0&&ord[e[i].v]==-1){
@@ -170,7 +172,7 @@ ll Dfs(int now,ll nowflow){
     }
     return totflow;
 }
-vector<string>Sol(vector<int>users_val,int limm){
+vector<string>Sol(vector<int>users_val,double limm,bool hasOut){
     vector<string>ansPath;
     Tn=N+M+2;
     for(int i=0;i<Tn;i++){
@@ -205,12 +207,15 @@ vector<string>Sol(vector<int>users_val,int limm){
     for(int i=0;i<M;i++)tar+=users_val[i];
     if(is_debug)printf("ANS %lld %lld\n",res,tar);
     if(res!=tar)return ansPath;
+    int sumCost[500];
+    for(int i=0;i<N;i++)sumCost[i]=0;
     for(int u=0;u<M;u++){
         string pat=users_name[u]+":";
         vector<string>tmp;
         for(int i=head[u+1];i!=-1;i=e[i].pre){
             if(e[i^1].t>0){
                 tmp.push_back("<"+nodes_name[e[i].v-1-M]+","+to_string(e[i^1].t)+">");
+                sumCost[e[i].v-1-M]+=e[i^1].t;
             }
         }
         if(tmp.size()){
@@ -220,6 +225,9 @@ vector<string>Sol(vector<int>users_val,int limm){
             pat+=tmp[tmp.size()-1];
         }
         ansPath.push_back(pat);
+    }
+    if(hasOut){
+        for(int i=0;i<N;i++)Co[i].push_back(sumCost[i]);
     }
     return ansPath;
 }
@@ -236,19 +244,19 @@ int main() {
         printf("open out file fail\n");
     }
     for(int tt=0;tt<T;tt++){
-        int l=100,r=100;
-        vector<string>res;
-        while(l<=r){
-            int mid=(l+r)/2;
-            vector<string>ress=Sol(G[tt],mid);
+        double l=0.01,r=100,anspos=-1;;
+        for(int i=1;i<20;i++){
+            double mid=(l+r)/2;
+            vector<string>ress=Sol(G[tt],mid,0);
             if(ress.size()){
-                res.clear();
-                for(auto it:ress)res.push_back(it);
-                r=mid-1;
+                r=mid;
+                anspos=mid;
             }else {
-                l=mid+1;
+                l=mid;
             }
         }
+        vector<string>res=Sol(G[tt],anspos,1);
+        
         if(is_debug){
             printf("---------------------------\n");
             for(auto it:res)printf("%s\n",it.c_str());
@@ -260,8 +268,18 @@ int main() {
         outstrm<<res[res.size()-1];
         if(tt!=T-1)outstrm<<"\n";
     }
-
     outstrm.close();
+    if(is_local){
+        ll totCost=0;
+        int pos95=ceil(T*95/100.0);
+        printf("pos %d\n",pos95);
+        for(int i=0;i<N;i++){
+            sort(Co[i].begin(),Co[i].end());
+            totCost+=Co[i][pos95-1];
+        }
+        printf("cost %lld\n",totCost);
+
+    }
     return 0;
 }
 
