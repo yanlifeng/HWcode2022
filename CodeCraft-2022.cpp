@@ -7,9 +7,11 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <ctime>
+#include <cstdlib>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -121,7 +123,8 @@ void inputData(){
 struct edge{
     int v,t,pre;
 }e[500*500];
-int num,head[500],ord[500],Tn;
+int num,head[500],ord[500],Tn,randVal[500];
+int myrandom (int i) { return std::rand()%i;}
 void addEdge(int from,int to,int val){
     e[num].v=to;
     e[num].t=val;
@@ -136,7 +139,13 @@ bool Bfs(){
     while(!Q.empty()){
         int now=Q.front();
         Q.pop();
-        for(int i=head[now];i!=-1;i=e[i].pre){
+        vector<pair<int,int>>Ei;
+        for(int i=head[now];i!=-1;i=e[i].pre)
+            Ei.push_back(make_pair(-1*randVal[e[i].v],i));
+        //random_shuffle ( Ei.begin(), Ei.end(), myrandom);
+        sort(Ei.begin(),Ei.end());
+        for(auto it:Ei){
+            int i=it.second;
             if(e[i].t>0&&ord[e[i].v]==-1){
                 Q.push(e[i].v);
                 ord[e[i].v]=ord[now]+1;
@@ -161,10 +170,18 @@ ll Dfs(int now,ll nowflow){
     }
     return totflow;
 }
-vector<string>Sol(vector<int>users_val){
+vector<string>Sol(vector<int>users_val,int limm){
     vector<string>ansPath;
-    num=0;
     Tn=N+M+2;
+    for(int i=0;i<Tn;i++){
+        randVal[i]=0;
+    }
+    for(int i=0;i<N;i++){
+        if(rand()%100>=95){
+            randVal[i+M+1]=100+nodes_val[i];
+        }
+    }
+    num=0;
     for(int i=0;i<Tn;i++)head[i]=-1;
     for(int i=0;i<M;i++){
         addEdge(0,i+1,users_val[i]);
@@ -179,7 +196,7 @@ vector<string>Sol(vector<int>users_val){
         }
     }
     for(int i=0;i<N;i++){
-        addEdge(i+M+1,Tn-1,nodes_val[i]);
+        addEdge(i+M+1,Tn-1,int(limm*nodes_val[i]/100.0));
         addEdge(Tn-1,i+M+1,0);
     }
     ll res=0;
@@ -187,7 +204,7 @@ vector<string>Sol(vector<int>users_val){
     ll tar=0;
     for(int i=0;i<M;i++)tar+=users_val[i];
     if(is_debug)printf("ANS %lld %lld\n",res,tar);
-    if(res!=tar)while(1){}
+    if(res!=tar)return ansPath;
     for(int u=0;u<M;u++){
         string pat=users_name[u]+":";
         vector<string>tmp;
@@ -207,6 +224,7 @@ vector<string>Sol(vector<int>users_val){
     return ansPath;
 }
 int main() {
+    std::srand ( unsigned ( std::time(0) ) );
     inputData();    
     ofstream outstrm;
     if(is_local){
@@ -218,7 +236,19 @@ int main() {
         printf("open out file fail\n");
     }
     for(int tt=0;tt<T;tt++){
-        vector<string>res=Sol(G[tt]);
+        int l=100,r=100;
+        vector<string>res;
+        while(l<=r){
+            int mid=(l+r)/2;
+            vector<string>ress=Sol(G[tt],mid);
+            if(ress.size()){
+                res.clear();
+                for(auto it:ress)res.push_back(it);
+                r=mid-1;
+            }else {
+                l=mid+1;
+            }
+        }
         if(is_debug){
             printf("---------------------------\n");
             for(auto it:res)printf("%s\n",it.c_str());
