@@ -124,7 +124,7 @@ void inputData(){
 struct edge{
     int v,t,pre;
 }e[500*500];
-int num,head[500],ord[500],Tn,randVal[500];
+int num,head[500],ord[500],Tn;
 vector<int>Co[500];
 int myrandom (int i) { return std::rand()%i;}
 void addEdge(int from,int to,int val){
@@ -141,13 +141,7 @@ bool Bfs(){
     while(!Q.empty()){
         int now=Q.front();
         Q.pop();
-        vector<pair<int,int>>Ei;
-        for(int i=head[now];i!=-1;i=e[i].pre)
-            Ei.push_back(make_pair(-1*randVal[e[i].v],i));
-        //random_shuffle(Ei.begin(),Ei.end(),myrandom);
-        //sort(Ei.begin(),Ei.end());
-        for(auto it:Ei){
-            int i=it.second;
+        for(int i=head[now];i!=-1;i=e[i].pre){
             if(e[i].t>0&&ord[e[i].v]==-1){
                 Q.push(e[i].v);
                 ord[e[i].v]=ord[now]+1;
@@ -175,14 +169,100 @@ ll Dfs(int now,ll nowflow){
 vector<string>Sol(vector<int>users_val,double limm,bool hasOut){
     vector<string>ansPath;
     Tn=N+M+2;
-    for(int i=0;i<Tn;i++){
-        randVal[i]=0;
-    }
-    for(int i=0;i<N;i++){
-        if(rand()%100>=95){
-            randVal[i+M+1]=100+nodes_val[i];
+    ll usersSum=0;
+    for(int i=0;i<M;i++)usersSum+=users_val[i];
+    ll nodesSum=0;
+    for(int i=0;i<N;i++)nodesSum+=nodes_val[i];
+    printf("userSum %lld; nodeSum %lld\n",usersSum,nodesSum);
+    if(usersSum<=nodesSum*0.05){
+    //if(1){
+        printf("now use method 2\n");
+        vector<int>nos_val;
+        for(int i=0;i<N;i++)
+            nos_val.push_back(nodes_val[i]);
+        vector<int>us_val;
+        for(int i=0;i<M;i++)
+            us_val.push_back(users_val[i]);
+        vector<int>randPs0;
+        vector<int>randPs1;
+        vector<int>randPs2;
+        for(int i=0;i<N;i++)
+            randPs0.push_back(i);
+        random_shuffle(randPs0.begin(),randPs0.end(),myrandom); 
+        int p5pos=int(N*0.05);
+        for(int i=0;i<p5pos;i++)
+            randPs1.push_back(randPs0[i]);
+        for(int i=p5pos;i<N;i++)
+            randPs2.push_back(randPs0[i]);
+        printf("random choose :\n");
+        for(auto it:randPs1)printf("%d ",it);
+        printf("\n");
+        vector<pair<int,int>>userTo[500];
+        for(int i=0;i<M;i++){
+            for(auto j:randPs1){
+                if(dis[i][j]>=DIS)continue;
+                int toUse=min(us_val[i],nos_val[j]);
+                us_val[i]-=toUse;
+                nos_val[j]-=toUse;
+                if(toUse){
+                    userTo[i].push_back(make_pair(j,toUse));
+                }
+            }
         }
+        printf("=====================\n");
+        printf("round 1:\n");
+        for(int i=0;i<M;i++)
+            printf("%d ",us_val[i]);
+        printf("\n");
+        //for(int i=0;i<N;i++)
+        //    printf("%d ",nos_val[i]);
+        //printf("\n");
+        for(int i=0;i<M;i++){
+            for(auto j:randPs2){
+                if(dis[i][j]>=DIS)continue;
+                int toUse=min(us_val[i],nos_val[j]);
+                us_val[i]-=toUse;
+                nos_val[j]-=toUse;
+                if(toUse){
+                    userTo[i].push_back(make_pair(j,toUse));
+                }
+            }
+        }
+        printf("round 2:\n");
+        for(int i=0;i<M;i++)
+            printf("%d ",us_val[i]);
+        printf("\n");
+        //for(int i=0;i<N;i++)
+        //    printf("%d ",nos_val[i]);
+        //printf("\n");
+        printf("=====================\n");
+        int ok=1;
+        for(int i=0;i<M;i++)
+            if(us_val[i]>0)ok=0;
+        if(ok){
+            int sumCost[500];
+            for(int i=0;i<N;i++)sumCost[i]=0;
+            for(int i=0;i<M;i++){
+                string pat=users_name[i]+":";
+                vector<string>tmp;
+                for(auto it:userTo[i]){
+                    tmp.push_back("<"+nodes_name[it.first]+","+to_string(it.second)+">");
+                    sumCost[it.first]+=it.second;
+                }
+                if(tmp.size()){
+                    for(int ii=0;ii<tmp.size()-1;ii++){
+                        pat+=tmp[ii]+",";
+                    }
+                    pat+=tmp[tmp.size()-1];
+                }
+                ansPath.push_back(pat);
+            }
+            for(int i=0;i<N;i++)Co[i].push_back(sumCost[i]);
+            return ansPath;
+        }
+        else printf("method 2 failed\n");
     }
+    ansPath.clear();
     num=0;
     for(int i=0;i<Tn;i++)head[i]=-1;
     for(int i=0;i<M;i++){
@@ -236,7 +316,7 @@ int main() {
     inputData();    
     ofstream outstrm;
     if(is_local){
-        outstrm.open("/Users/ylf9811/Downloads/huaweicode2022/solution.txt");
+        outstrm.open("/Users/ylf9811/Downloads/CodeCraft2022-charge-main/output/solution.txt");
     }else{
         outstrm.open("/output/solution.txt");
     }
@@ -244,19 +324,21 @@ int main() {
         printf("open out file fail\n");
     }
     for(int tt=0;tt<T;tt++){
-        double l=0.01,r=100,anspos=-1;;
-        for(int i=1;i<20;i++){
-            double mid=(l+r)/2;
-            vector<string>ress=Sol(G[tt],mid,0);
-            if(ress.size()){
-                r=mid;
-                anspos=mid;
-            }else {
-                l=mid;
-            }
-        }
-        vector<string>res=Sol(G[tt],anspos,1);
-        
+        /*
+           double l=0.01,r=100,anspos=-1;;
+           for(int i=1;i<20;i++){
+           double mid=(l+r)/2;
+           vector<string>ress=Sol(G[tt],mid,0);
+           if(ress.size()){
+           r=mid;
+           anspos=mid;
+           }else {
+           l=mid;
+           }
+           }
+           vector<string>res=Sol(G[tt],anspos,1);
+           */
+        vector<string>res=Sol(G[tt],100,1);
         if(is_debug){
             printf("---------------------------\n");
             for(auto it:res)printf("%s\n",it.c_str());
@@ -265,7 +347,7 @@ int main() {
         for(int i=0;i<res.size()-1;i++){
             outstrm<<res[i]<<"\n";
         }
-        outstrm<<res[res.size()-1];
+        if(res.size())outstrm<<res[res.size()-1];
         if(tt!=T-1)outstrm<<"\n";
     }
     outstrm.close();
