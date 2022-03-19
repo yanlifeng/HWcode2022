@@ -10,9 +10,10 @@
 #include <ctime>
 #include <cmath>
 #include <cstdlib>
+#include <set>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -166,6 +167,8 @@ ll Dfs(int now,ll nowflow){
     }
     return totflow;
 }
+int nodes_tims[500];
+bool bad_nodes[500];
 vector<string>Sol(vector<int>users_val,double limm,bool hasOut){
     vector<string>ansPath;
     Tn=N+M+2;
@@ -174,7 +177,7 @@ vector<string>Sol(vector<int>users_val,double limm,bool hasOut){
     ll nodesSum=0;
     for(int i=0;i<N;i++)nodesSum+=nodes_val[i];
     printf("userSum %lld; nodeSum %lld\n",usersSum,nodesSum);
-    if(usersSum<=nodesSum*0.05){
+    if(usersSum<=nodesSum*0.1){
     //if(1){
         printf("now use method 2\n");
         vector<int>nos_val;
@@ -183,49 +186,85 @@ vector<string>Sol(vector<int>users_val,double limm,bool hasOut){
         vector<int>us_val;
         for(int i=0;i<M;i++)
             us_val.push_back(users_val[i]);
-        vector<int>randPs0;
-        vector<int>randPs1;
-        vector<int>randPs2;
+        int nodeALim=N-ceil(N*0.95);
+        int Tlim=T-ceil(T*0.95);
+        int useNodes=0;
+        set<int>nodeSet;
         for(int i=0;i<N;i++)
-            randPs0.push_back(i);
-        random_shuffle(randPs0.begin(),randPs0.end(),myrandom); 
-        int p5pos=int(N*0.05);
-        for(int i=0;i<p5pos;i++)
-            randPs1.push_back(randPs0[i]);
-        for(int i=p5pos;i<N;i++)
-            randPs2.push_back(randPs0[i]);
-        printf("random choose :\n");
-        for(auto it:randPs1)printf("%d ",it);
-        printf("\n");
+            if(nodes_tims[i]<Tlim)
+                nodeSet.insert(i);
         vector<pair<int,int>>userTo[500];
-        for(int i=0;i<M;i++){
-            for(auto j:randPs1){
-                if(dis[i][j]>=DIS)continue;
-                int toUse=min(us_val[i],nos_val[j]);
+        //这里改了一下策略，不仅是要选满的，并且是实时贪心的
+        //每一轮找出一个目前最满的边缘节点goodi，然后直接把它用了，更新用户节点余量，更新该边缘节点使用次数，更新未使用边缘节点set
+        vector<int>randPs;
+        while(1){
+            if(useNodes>=nodeALim)break;
+            int done=1;
+            for(int i=0;i<M;i++)
+                if(us_val[i])done=0;
+            if(done)break;
+            vector<pair<double,int>>tmpNodes;
+            for(auto i:nodeSet){
+                int totSum=0;
+                for(int j=0;j<M;j++)
+                    if(dis[j][i]<DIS)
+                        totSum+=us_val[j];
+                totSum=min(totSum,nos_val[i]);
+                tmpNodes.push_back(make_pair(-1.0*totSum/nos_val[i],i));
+            }
+            sort(tmpNodes.begin(),tmpNodes.end());
+            printf("tmpNodes size %d\n",tmpNodes.size());
+            int goodi=tmpNodes[0].second;
+            nodeSet.erase(goodi);
+            if(nodes_tims[goodi]>=Tlim){
+                randPs.push_back(goodi);
+                continue;
+            }
+            if(-tmpNodes[0].first<=0.01){
+                randPs.push_back(goodi);
+                break;
+            }
+            useNodes++;
+            nodes_tims[goodi]++;
+            printf("this round get goodi %d, use %.4f\n",goodi,tmpNodes[0].first);
+            for(int i=0;i<M;i++){
+                if(dis[i][goodi]>=DIS)continue;
+                int toUse=min(us_val[i],nos_val[goodi]);
                 us_val[i]-=toUse;
-                nos_val[j]-=toUse;
+                nos_val[goodi]-=toUse;
                 if(toUse){
-                    userTo[i].push_back(make_pair(j,toUse));
+                    userTo[i].push_back(make_pair(goodi,toUse));
                 }
             }
+            printf("round 1:\n");
+            for(int i=0;i<M;i++)
+                printf("%d ",us_val[i]);
+            printf("\n");
         }
+        for(auto it:nodeSet)randPs.push_back(it);
         printf("=====================\n");
-        printf("round 1:\n");
-        for(int i=0;i<M;i++)
-            printf("%d ",us_val[i]);
-        printf("\n");
-        //for(int i=0;i<N;i++)
-        //    printf("%d ",nos_val[i]);
-        //printf("\n");
         for(int i=0;i<M;i++){
-            for(auto j:randPs2){
-                if(dis[i][j]>=DIS)continue;
-                int toUse=min(us_val[i],nos_val[j]);
-                us_val[i]-=toUse;
-                nos_val[j]-=toUse;
-                if(toUse){
-                    userTo[i].push_back(make_pair(j,toUse));
+            int canCnt=0;
+            for(auto j:randPs)
+                if(dis[i][j]<DIS)canCnt++;
+            int avgVal=ceil(1.0*us_val[i]/canCnt);
+            int tmpVl[500];
+            for(int j=0;j<N;j++)
+                tmpVl[j]=0;
+            for(int t=0;;t++){
+                int preVal=us_val[i];
+                for(auto j:randPs){
+                    if(dis[i][j]>=DIS)continue;
+                    int toUse=min(min(avgVal,us_val[i]),nos_val[j]);
+                    us_val[i]-=toUse;
+                    nos_val[j]-=toUse;
+                    tmpVl[j]+=toUse;
                 }
+                if(us_val[i]==preVal||us_val[i]==0)break;
+            }
+            for(auto j:randPs){
+                if(tmpVl[j])
+                    userTo[i].push_back(make_pair(j,tmpVl[j]));
             }
         }
         printf("round 2:\n");
@@ -313,7 +352,29 @@ vector<string>Sol(vector<int>users_val,double limm,bool hasOut){
 }
 int main() {
     std::srand ( unsigned ( std::time(0) ) );
-    inputData();    
+    inputData();
+    printf("M:%d,N:%d\n\n",M,N);
+    printf("chu du:\n");
+    int chudu[500]={0};
+    int rudu[500]={0};
+    for(int i=0;i<M;i++){
+        printf("%s:",users_name[i].c_str());
+        int cnt=0;
+        for(int j=0;j<N;j++)
+            if(dis[i][j]<DIS)cnt++;
+        printf(" %d\n",cnt);
+        chudu[i]=cnt;
+    }
+    printf("ru du:\n");
+    for(int j=0;j<N;j++){
+        printf("%s:",nodes_name[j].c_str());
+        int cnt=0;
+        for(int i=0;i<M;i++)
+            if(dis[i][j]<DIS)cnt++;
+        printf(" %d\n",cnt);
+        rudu[j]=cnt;
+        if(cnt<=M*0.2)bad_nodes[j]=1;
+    }
     ofstream outstrm;
     if(is_local){
         outstrm.open("/Users/ylf9811/Downloads/CodeCraft2022-charge-main/output/solution.txt");
@@ -323,7 +384,16 @@ int main() {
     if(!outstrm){
         printf("open out file fail\n");
     }
+    vector<pair<ll,int>>Tis;
     for(int tt=0;tt<T;tt++){
+        ll sum=0;
+        for(auto it:G[tt])sum+=it;
+        Tis.push_back(make_pair(-sum,tt));
+    }
+    sort(Tis.begin(),Tis.end());
+    vector<pair<int,vector<string>>>AAns;
+    for(int tt=0;tt<T;tt++){
+        printf("day %d\n",tt);
         /*
            double l=0.01,r=100,anspos=-1;;
            for(int i=1;i<20;i++){
@@ -338,26 +408,56 @@ int main() {
            }
            vector<string>res=Sol(G[tt],anspos,1);
            */
-        vector<string>res=Sol(G[tt],100,1);
+        int tid=Tis[tt].second;
+        vector<string>res=Sol(G[tid],100,1);
+        AAns.push_back(make_pair(tid,res));
         if(is_debug){
             printf("---------------------------\n");
             for(auto it:res)printf("%s\n",it.c_str());
             printf("---------------------------\n");
         }
+        /*
         for(int i=0;i<res.size()-1;i++){
             outstrm<<res[i]<<"\n";
         }
         if(res.size())outstrm<<res[res.size()-1];
         if(tt!=T-1)outstrm<<"\n";
+        */
+    }
+    sort(AAns.begin(),AAns.end());
+    for(auto it:AAns){
+        auto res=it.second;
+        for(auto item:res){
+            outstrm<<item<<"\n";
+        }
     }
     outstrm.close();
     if(is_local){
+        printf("%d\n",T);
+        printf("tims:\n");
+        for(int i=0;i<N;i++)printf("%d ",nodes_tims[i]);
+        printf("\n");
         ll totCost=0;
         int pos95=ceil(T*95/100.0);
         printf("pos %d\n",pos95);
         for(int i=0;i<N;i++){
-            sort(Co[i].begin(),Co[i].end());
-            totCost+=Co[i][pos95-1];
+            printf("node name:%s, random use time:%d, rudu:%d: ",nodes_name[i].c_str(),nodes_tims[i],rudu[i]);
+            vector<pair<int,int>>tmpCo;
+            for(int t=0;t<Co[i].size();t++){
+                tmpCo.push_back(make_pair(Co[i][t],t));
+            }
+            sort(tmpCo.begin(),tmpCo.end());
+            for(auto it:tmpCo)printf("%d %d, ",it.first,it.second);
+            printf("\n");
+            totCost+=tmpCo[pos95-1].first;
+            for(int t=4;t>=0;t--){
+                int uid=tmpCo[tmpCo.size()-t-1].second;
+                ll sum=0;
+                for(int j=0;j<M;j++)
+                    if(dis[j][i]<DIS)sum+=G[uid][j];
+                printf("%lld %d , ",sum,uid);
+            }
+            printf("----------%d\n",tmpCo[pos95-1].first);
         }
         printf("cost %lld\n",totCost);
 
