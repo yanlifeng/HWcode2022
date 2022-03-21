@@ -24,7 +24,7 @@ int nodes_val[500];
 int dis[500][500];
 int DIS;
 int T,M,N;
-
+int cnttt;
 vector<string> splitByCom(string data,char c){
     vector<string>res;
     stringstream ss(data);
@@ -173,6 +173,11 @@ ll Dfs(int now,ll nowflow){
 }
 int nodes_tims[500];
 bool bad_nodes[500];
+int cntt;
+const double nodesLow=0.8;
+const double nodesUp=0.95;
+double nodesNow=nodesLow;
+const double nodesScale=nodesUp-nodesLow;
 vector<string>Sol(vector<int>users_val){
     vector<string>ansPath;
     Tn=N+M+2;
@@ -181,8 +186,10 @@ vector<string>Sol(vector<int>users_val){
     ll nodesSum=0;
     for(int i=0;i<N;i++)nodesSum+=nodes_val[i];
     printf("userSum %lld; nodeSum %lld\n",usersSum,nodesSum);
-    if(usersSum<=nodesSum*0.1){
-        //if(1){
+    cntt++;
+    //if(cntt<=T*0.75){
+    //if(usersSum<=nodesSum*0.1){
+    if(1){
         printf("now use method 2\n");
         vector<int>nos_val;
         for(int i=0;i<N;i++)
@@ -190,8 +197,9 @@ vector<string>Sol(vector<int>users_val){
         vector<int>us_val;
         for(int i=0;i<M;i++)
             us_val.push_back(users_val[i]);
-        int nodeALim=N-ceil(N*0.95);
+        int nodeALim=N-ceil(N*nodesNow);
         int Tlim=T-ceil(T*0.95);
+        nodesNow+=nodesScale/T;
         int useNodes=0;
         set<int>nodeSet;
         set<int>randPs;
@@ -199,7 +207,7 @@ vector<string>Sol(vector<int>users_val){
             if(nodes_tims[i]<Tlim)
                 nodeSet.insert(i);
         vector<pair<int,int>>userTo[500];
-        while(1){
+        while(nodeSet.size()){
             if(useNodes>=nodeALim)break;
             int done=1;
             for(int i=0;i<M;i++)
@@ -212,18 +220,14 @@ vector<string>Sol(vector<int>users_val){
                     if(dis[j][i]<DIS)
                         totSum+=us_val[j];
                 totSum=min(totSum,nos_val[i]);
-                tmpNodes.push_back(make_pair(-1.0*totSum/nos_val[i],i));
+                tmpNodes.push_back(make_pair(-1.0*totSum,i));
             }
             sort(tmpNodes.begin(),tmpNodes.end());
             printf("tmpNodes size %d\n",tmpNodes.size());
             int goodi=tmpNodes[0].second;
             nodeSet.erase(goodi);
-            if(nodes_tims[goodi]>=Tlim){
-                //randPs.push_back(goodi);
-                continue;
-            }
-            //if(-tmpNodes[0].first<=0.01){
-            //    randPs.push_back(goodi);
+            //TODO
+            //if(-tmpNodes[0].first<=){
             //    break;
             //}
             useNodes++;
@@ -250,9 +254,6 @@ vector<string>Sol(vector<int>users_val){
             for(auto j:randPs)
                 if(dis[i][j]<DIS)canCnt++;
             int avgVal=ceil(1.0*us_val[i]/canCnt);
-            if(i==1){
-                printf("canCnt:%d, avgVal:%d\n",canCnt,avgVal);
-            }
             int tmpVl[500];
             for(int j=0;j<N;j++)
                 tmpVl[j]=0;
@@ -307,6 +308,7 @@ vector<string>Sol(vector<int>users_val){
         else printf("method 2 failed\n");
     }
     ansPath.clear();
+    cnttt++;
     num=0;
     for(int i=0;i<Tn;i++)head[i]=-1;
     for(int i=0;i<M;i++){
@@ -326,124 +328,128 @@ vector<string>Sol(vector<int>users_val){
         addEdge(Tn-1,i+M+1,0);
     }
     ll res=0;
-    while(Bfs())res+=Dfs(0,1e15);
-        ll tar=0;
-        for(int i=0;i<M;i++)tar+=users_val[i];
-        if(is_debug)printf("ANS %lld %lld\n",res,tar);
-        if(res!=tar)return ansPath;
-        int sumCost[500];
-        for(int i=0;i<N;i++)sumCost[i]=0;
-        for(int u=0;u<M;u++){
-            string pat=users_name[u]+":";
-            vector<string>tmp;
-            for(int i=head[u+1];i!=-1;i=e[i].pre){
-                if(e[i^1].t>0){
-                    tmp.push_back("<"+nodes_name[e[i].v-1-M]+","+to_string(e[i^1].t)+">");
-                    sumCost[e[i].v-1-M]+=e[i^1].t;
-                }
+    while(Bfs())
+        res+=Dfs(0,1e15);
+    ll tar=0;
+    for(int i=0;i<M;i++)tar+=users_val[i];
+    if(is_debug)printf("ANS %lld %lld\n",res,tar);
+    if(res!=tar)return ansPath;
+    int sumCost[500];
+    for(int i=0;i<N;i++)sumCost[i]=0;
+    for(int u=0;u<M;u++){
+        string pat=users_name[u]+":";
+        vector<string>tmp;
+        for(int i=head[u+1];i!=-1;i=e[i].pre){
+            if(e[i^1].t>0){
+                tmp.push_back("<"+nodes_name[e[i].v-1-M]+","+to_string(e[i^1].t)+">");
+                sumCost[e[i].v-1-M]+=e[i^1].t;
             }
-            if(tmp.size()){
-                for(int i=0;i<tmp.size()-1;i++){
-                    pat+=tmp[i]+",";
-                }
-                pat+=tmp[tmp.size()-1];
-            }
-            ansPath.push_back(pat);
         }
-        for(int i=0;i<N;i++)Co[i].push_back(sumCost[i]);
-        return ansPath;
+        if(tmp.size()){
+            for(int i=0;i<tmp.size()-1;i++){
+                pat+=tmp[i]+",";
+            }
+            pat+=tmp[tmp.size()-1];
+        }
+        ansPath.push_back(pat);
     }
-    int main() {
-        std::srand ( unsigned ( std::time(0) ) );
-        inputData();
-        printf("M:%d,N:%d\n\n",M,N);
-        printf("chu du:\n");
-        int chudu[500]={0};
-        int rudu[500]={0};
-        for(int i=0;i<M;i++){
-            printf("%s:",users_name[i].c_str());
-            int cnt=0;
-            for(int j=0;j<N;j++)
-                if(dis[i][j]<DIS)cnt++;
-            printf(" %d\n",cnt);
-            chudu[i]=cnt;
-        }
-        printf("ru du:\n");
-        for(int j=0;j<N;j++){
-            printf("%s:",nodes_name[j].c_str());
-            int cnt=0;
-            for(int i=0;i<M;i++)
-                if(dis[i][j]<DIS)cnt++;
-            printf(" %d\n",cnt);
-            rudu[j]=cnt;
-            if(cnt<=M*0.2)bad_nodes[j]=1;
-        }
-        ofstream outstrm;
-        if(is_local){
-            outstrm.open("/Users/ylf9811/Downloads/CodeCraft2022-charge-main/output/solution.txt");
-        }else{
-            outstrm.open("/output/solution.txt");
-        }
-        if(!outstrm){
-            printf("open out file fail\n");
-        }
-        vector<pair<ll,int>>Tis;
-        for(int tt=0;tt<T;tt++){
-            ll sum=0;
-            for(auto it:G[tt])sum+=it;
-            Tis.push_back(make_pair(-sum,tt));
-        }
-        sort(Tis.begin(),Tis.end());
-        vector<pair<int,vector<string>>>AAns;
-        for(int tt=0;tt<T;tt++){
-            printf("day %d %d\n",tt,Tis[tt].second);
-            int tid=Tis[tt].second;
-            vector<string>res=Sol(G[tid]);
-            AAns.push_back(make_pair(tid,res));
-            if(is_debug){
-                printf("---------------------------\n");
-                for(auto it:res)printf("%s\n",it.c_str());
-                printf("---------------------------\n");
-            }
-        }
-        sort(AAns.begin(),AAns.end());
-        for(auto it:AAns){
-            auto res=it.second;
-            for(auto item:res){
-                outstrm<<item<<"\n";
-            }
-        }
-        outstrm.close();
-        if(is_local){
-            printf("%d\n",T);
-            printf("tims:\n");
-            for(int i=0;i<N;i++)printf("%d ",nodes_tims[i]);
-            printf("\n");
-            ll totCost=0;
-            int pos95=ceil(T*95/100.0);
-            printf("pos %d\n",pos95);
-            for(int i=0;i<N;i++){
-                printf("node name:%s, random use time:%d, rudu:%d: ",nodes_name[i].c_str(),nodes_tims[i],rudu[i]);
-                vector<pair<int,int>>tmpCo;
-                for(int t=0;t<Co[i].size();t++){
-                    tmpCo.push_back(make_pair(Co[i][t],t));
-                }
-                sort(tmpCo.begin(),tmpCo.end());
-                for(auto it:tmpCo)printf("%d %d, ",it.first,it.second);
-                printf("\n");
-                totCost+=tmpCo[pos95-1].first;
-                for(int t=4;t>=0;t--){
-                    int uid=tmpCo[tmpCo.size()-t-1].second;
-                    ll sum=0;
-                    for(int j=0;j<M;j++)
-                        if(dis[j][i]<DIS)sum+=G[uid][j];
-                    printf("%lld %d , ",sum,uid);
-                }
-                printf("----------%d\n",tmpCo[pos95-1].first);
-            }
-            printf("cost %lld\n",totCost);
+    for(int i=0;i<N;i++)Co[i].push_back(sumCost[i]);
+    return ansPath;
+}
 
-        }
-        return 0;
+int main() {
+    std::srand ( unsigned ( std::time(0) ) );
+    inputData();
+    printf("M:%d,N:%d\n\n",M,N);
+    printf("chu du:\n");
+    int chudu[500]={0};
+    int rudu[500]={0};
+    for(int i=0;i<M;i++){
+        printf("%s:",users_name[i].c_str());
+        int cnt=0;
+        for(int j=0;j<N;j++)
+            if(dis[i][j]<DIS)cnt++;
+        printf(" %d\n",cnt);
+        chudu[i]=cnt;
     }
+    printf("ru du:\n");
+    for(int j=0;j<N;j++){
+        printf("%s:",nodes_name[j].c_str());
+        int cnt=0;
+        for(int i=0;i<M;i++)
+            if(dis[i][j]<DIS)cnt++;
+        printf(" %d\n",cnt);
+        rudu[j]=cnt;
+        if(cnt<=M*0.2)bad_nodes[j]=1;
+    }
+    ofstream outstrm;
+    if(is_local){
+        outstrm.open("/Users/ylf9811/Downloads/CodeCraft2022-charge-main/output/solution.txt");
+    }else{
+        outstrm.open("/output/solution.txt");
+    }
+    if(!outstrm){
+        printf("open out file fail\n");
+    }
+    vector<pair<ll,int>>Tis;
+    for(int tt=0;tt<T;tt++){
+        ll sum=0;
+        for(auto it:G[tt])sum+=it;
+        Tis.push_back(make_pair(-sum,tt));
+    }
+    sort(Tis.begin(),Tis.end());
+    vector<pair<int,vector<string>>>AAns;
+    for(int tt=0;tt<T;tt++){
+        printf("day %d %d\n",tt,Tis[tt].second);
+        int tid=Tis[tt].second;
+        vector<string>res=Sol(G[tid]);
+        AAns.push_back(make_pair(tid,res));
+        if(is_debug){
+            printf("---------------------------\n");
+            for(auto it:res)printf("%s\n",it.c_str());
+            printf("---------------------------\n");
+        }
+    }
+    //if(cnttt>T*0.001)return 0;
+    sort(AAns.begin(),AAns.end());
+    for(auto it:AAns){
+        auto res=it.second;
+        for(auto item:res){
+            outstrm<<item<<"\n";
+        }
+    }
+    outstrm.close();
+    if(is_local){
+        printf("%d\n",T);
+        printf("tims:\n");
+        for(int i=0;i<N;i++)printf("%d ",nodes_tims[i]);
+        printf("\n");
+        ll totCost=0;
+        int pos95=ceil(T*95/100.0);
+        printf("pos %d\n",pos95);
+        for(int i=0;i<N;i++){
+            printf("node name:%s, random use time:%d, rudu:%d: ",nodes_name[i].c_str(),nodes_tims[i],rudu[i]);
+            vector<pair<int,int>>tmpCo;
+            for(int t=0;t<Co[i].size();t++){
+                tmpCo.push_back(make_pair(Co[i][t],t));
+            }
+            sort(tmpCo.begin(),tmpCo.end());
+            for(auto it:tmpCo)printf("%d %d, ",it.first,it.second);
+            printf("\n");
+            totCost+=tmpCo[pos95-1].first;
+            for(int t=4;t>=0;t--){
+                int uid=tmpCo[tmpCo.size()-t-1].second;
+                ll sum=0;
+                for(int j=0;j<M;j++)
+                    if(dis[j][i]<DIS)sum+=G[uid][j];
+                printf("%lld %d , ",sum,uid);
+            }
+            printf("----------%d\n",tmpCo[pos95-1].first);
+        }
+        printf("cnttt %d\n",cnttt);
+        printf("cost %lld\n",totCost);
+
+    }
+    return 0;
+}
 
