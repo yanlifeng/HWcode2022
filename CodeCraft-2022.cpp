@@ -25,6 +25,7 @@ int dis[500][500];
 int DIS;
 int T,M,N;
 int cnttt;
+ll totUserVal;
 vector<string> splitByCom(string data,char c){
     vector<string>res;
     stringstream ss(data);
@@ -63,6 +64,7 @@ void inputData(){
         vector<string>res=splitByCom(line_data,',');
         for(int i=1;i<res.size();i++){
             G[T].push_back(stoi(res[i]));
+            totUserVal+=stoi(res[i]);
         }
         T++;
     }
@@ -174,11 +176,15 @@ ll Dfs(int now,ll nowflow){
 int nodes_tims[500];
 bool bad_nodes[500];
 int cntt;
-const double nodesLow=0.8;
+const double nodesLow=0.9;
 const double nodesUp=0.95;
 double nodesNow=nodesLow;
 const double nodesScale=nodesUp-nodesLow;
+ll totUserValLei;
 vector<string>Sol(vector<int>users_val){
+    ll totUserValNow=0;
+    for(auto it:users_val)
+        totUserValNow+=it;
     vector<string>ansPath;
     Tn=N+M+2;
     ll usersSum=0;
@@ -188,7 +194,7 @@ vector<string>Sol(vector<int>users_val){
     printf("userSum %lld; nodeSum %lld\n",usersSum,nodesSum);
     cntt++;
     //if(cntt<=T*0.75){
-    //if(usersSum<=nodesSum*0.1){
+    //if(usersSum<=nodesSum*0.01){
     if(1){
         printf("now use method 2\n");
         vector<int>nos_val;
@@ -199,54 +205,65 @@ vector<string>Sol(vector<int>users_val){
             us_val.push_back(users_val[i]);
         int nodeALim=N-ceil(N*nodesNow);
         int Tlim=T-ceil(T*0.95);
+        //nodesNow+=nodesScale*totUserValNow/totUserVal;
         nodesNow+=nodesScale/T;
+        printf("nodesNow %lf\n",nodesNow);
         int useNodes=0;
         set<int>nodeSet;
         set<int>randPs;
-        for(int i=0;i<N;i++)
-            if(nodes_tims[i]<Tlim)
-                nodeSet.insert(i);
         vector<pair<int,int>>userTo[500];
-        while(nodeSet.size()){
-            if(useNodes>=nodeALim)break;
-            int done=1;
-            for(int i=0;i<M;i++)
-                if(us_val[i])done=0;
-            if(done)break;
-            vector<pair<double,int>>tmpNodes;
-            for(auto i:nodeSet){
-                int totSum=0;
-                for(int j=0;j<M;j++)
-                    if(dis[j][i]<DIS)
-                        totSum+=us_val[j];
-                totSum=min(totSum,nos_val[i]);
-                tmpNodes.push_back(make_pair(-1.0*totSum,i));
-            }
-            sort(tmpNodes.begin(),tmpNodes.end());
-            printf("tmpNodes size %d\n",tmpNodes.size());
-            int goodi=tmpNodes[0].second;
-            nodeSet.erase(goodi);
-            //TODO
-            //if(-tmpNodes[0].first<=){
-            //    break;
-            //}
-            useNodes++;
-            nodes_tims[goodi]++;
-            printf("this round get goodi %d, use %.4f\n",goodi,tmpNodes[0].first);
-            for(int i=0;i<M;i++){
-                if(dis[i][goodi]>=DIS)continue;
-                int toUse=min(us_val[i],nos_val[goodi]);
-                us_val[i]-=toUse;
-                nos_val[goodi]-=toUse;
-                if(toUse){
-                    userTo[i].push_back(make_pair(goodi,toUse));
+        //if(totUserValLei<totUserVal*0.9)
+        {
+        //if(totUserValNow*1.3591*T>=totUserVal){
+            for(int i=0;i<N;i++)
+                if(nodes_tims[i]<Tlim)
+                    nodeSet.insert(i);
+            while(nodeSet.size()){
+                if(useNodes>=nodeALim)break;
+                int done=1;
+                for(int i=0;i<M;i++)
+                    if(us_val[i])done=0;
+                if(done)break;
+                vector<pair<double,int>>tmpNodes;
+                for(auto i:nodeSet){
+                    int totSum=0;
+                    for(int j=0;j<M;j++)
+                        if(dis[j][i]<DIS)
+                            totSum+=us_val[j];
+                    totSum=min(totSum,nos_val[i]);
+                    tmpNodes.push_back(make_pair(-1.0*totSum,i));
                 }
+                sort(tmpNodes.begin(),tmpNodes.end());
+                printf("tmpNodes size %lu\n",tmpNodes.size());
+                int goodi=tmpNodes[0].second;
+                nodeSet.erase(goodi);
+                ll sumTmpUser=0;
+                for(int i=0;i<M;i++){
+                    sumTmpUser+=us_val[i];
+                }
+                //TODO
+                //if(-tmpNodes[0].first<=sumTmpUser*0.2){
+                //    break;
+                //}
+                useNodes++;
+                nodes_tims[goodi]++;
+                printf("this round get goodi %d, use %.4f\n",goodi,tmpNodes[0].first);
+                for(int i=0;i<M;i++){
+                    if(dis[i][goodi]>=DIS)continue;
+                    int toUse=min(us_val[i],nos_val[goodi]);
+                    us_val[i]-=toUse;
+                    nos_val[goodi]-=toUse;
+                    if(toUse){
+                        userTo[i].push_back(make_pair(goodi,toUse));
+                    }
+                }
+                printf("round 1:\n");
+                for(int i=0;i<M;i++)
+                    printf("%d ",us_val[i]);
+                printf("\n");
             }
-            printf("round 1:\n");
-            for(int i=0;i<M;i++)
-                printf("%d ",us_val[i]);
-            printf("\n");
         }
+        totUserValLei+=totUserValNow;
         for(int i=0;i<N;i++)randPs.insert(i);
         printf("=====================\n");
         for(int i=0;i<M;i++){
