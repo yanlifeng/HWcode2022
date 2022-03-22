@@ -294,31 +294,12 @@ vector<string>Sol(vector<int>users_val){
             for(int j=0;j<N;j++)
                 tmpAns[i][j]=0;
         for(int i=0;i<M;i++){
-            int rudusum=0;
-            for(int j=0;j<N;j++)
-                if(nos_val[j]&&dis[i][j]<DIS)
-                    rudusum+=rudu[j];
-            int canCnt=0;
-            for(int j=0;j<N;j++)
-                if(nos_val[j]&&dis[i][j]<DIS)
-                    canCnt++;
-            for(int j=0;j<N;j++){
-                if(dis[i][j]>=DIS||nos_val[j]==0)continue;
-                double FacMa=(canCnt-1)*rudusum;
-                double FacSon=rudusum-rudu[j];
-                int bestVal=us_val[i]*FacSon/FacMa;
-                bestVal=min(bestVal,nos_val[j]);
-                us_val[i]-=bestVal;
-                nos_val[j]-=bestVal;
-                if(bestVal){
-                    tmpAns[i][j]+=bestVal;
-                }
-            }
             if(us_val[i]){
-                vector<int>randids;
-                for(int j=0;j<N;j++)randids.push_back(j);
-                shuffle(randids.begin(),randids.end(),rng);
-                for(auto j:randids){
+                vector<pair<int,int>>randids;
+                for(int j=0;j<N;j++)randids.push_back(make_pair(-rudu[j],j));
+                sort(randids.begin(),randids.end());
+                for(auto it:randids){
+                    int j=it.second;
                     if(dis[i][j]>=DIS||nos_val[j]==0)continue;
                     int babaVal=min(us_val[i],nos_val[j]);
                     us_val[i]-=babaVal;
