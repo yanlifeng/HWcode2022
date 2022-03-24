@@ -14,7 +14,7 @@
 #include <random>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=0;
+const bool is_local=1;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -185,7 +185,7 @@ const double nodesUp=0.95;
 double nodesNow=nodesLow;
 const double nodesScale=nodesUp-nodesLow;
 ll totUserValLei;
-double ruduFac=0.5;
+double ruduFac=1.0;
 vector<string>Sol(vector<int>users_val){
     std::random_device rd;
     std::mt19937 rng(rd());
