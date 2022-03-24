@@ -14,7 +14,7 @@
 #include <random>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -44,7 +44,6 @@ void inputData(){
     if(is_local){
         //in_path="/Users/ylf9811/Downloads/huaweicode2022/smallData/";
         in_path="/home/xbr/hw2022/data/";
-        //in_path="/home/xbr/hw2022/CodeCraft2022-PressureGenerator/simulated_data";
     }else{
         in_path="/data/";
     }
@@ -230,6 +229,8 @@ vector<string>Sol(vector<int>users_val){
             while(nodeSet.size()){
                 if(useNodes>=nodeALim)break;
                 int done=1;
+
+                // if all requriments = 0?
                 for(int i=0;i<M;i++)
                     if(us_val[i])done=0;
                 if(done)break;
@@ -237,6 +238,7 @@ vector<string>Sol(vector<int>users_val){
                 ll totSumMax=0;
                 vector<ll>totSums;
                 for(auto i:nodeSet){
+
                     ll totSum=0;
                     for(int j=0;j<M;j++)
                         if(dis[j][i]<DIS)
@@ -249,7 +251,6 @@ vector<string>Sol(vector<int>users_val){
                 for(auto i:nodeSet){
                     //tmpNodes.push_back(make_pair(-(1.0*totSums[ii++]/totSumMax+ruduFac/max(rudu[i],1)),i));
                     tmpNodes.push_back(make_pair(-(1.0*totSums[ii++]/totSumMax+ruduFac*(1.0*(N-rudu[i])/N)),i));
-                    //tmpNodes.push_back(make_pair(-rudu[i],i));
                     //tmpNodes.push_back(make_pair(-1.0*totSums[ii++],i));
                 }
                 sort(tmpNodes.begin(),tmpNodes.end());
@@ -269,18 +270,48 @@ vector<string>Sol(vector<int>users_val){
                 useNodes++;
                 nodes_tims[goodi]++;
                 printf("this round get goodi %d, use %.4f\n",goodi,tmpNodes[0].first);
-                
+
+                vector<pair<double,int>> tmpUserNode;
+                ll us_Max= 0 ;
+                ll chudu_max = 0;
+
+                for (int i=0;i<M;i++){
+                    if(us_Max<us_val[i]){
+                        us_Max = us_val[i];
+                    }
+
+                    if(chudu_max<chudu[i]){
+                        chudu_max = chudu[i];
+                    }
+                }
+                for (int i=0;i<M;i++){
+                    //tmpUserNode.push_back(make_pair((1.0*us_val[i]/us_Max+1.0*chudu[i]/chudu_max),i));
+                    tmpUserNode.push_back(make_pair((chudu[i]),i));
+                    //tmpUserNode.push_back(make_pair(us_val[i],i));
+                }
+                sort(tmpUserNode.begin(),tmpUserNode.end());
 
 
-                //for(int i=0;i<M;i++){
-                //    if(dis[i][goodi]>=DIS)continue;
-                //    int toUse=min(us_val[i],nos_val[goodi]);
-                //    us_val[i]-=toUse;
-                //    nos_val[goodi]-=toUse;
-                //    if(toUse){
-                //        userTo[i].push_back(make_pair(goodi,toUse));
-                //    }
-                //}
+                for(auto it:tmpUserNode){
+
+                    int i = it.second;
+                    if(dis[i][goodi]>=DIS)continue;
+                    int toUse=min(us_val[i],nos_val[goodi]);
+                    us_val[i]-=toUse;
+                    nos_val[goodi]-=toUse;
+                    if(toUse){
+                        userTo[i].push_back(make_pair(goodi,toUse));
+                    }
+                }
+                // for(int i=0;i<M;i++){
+                //     if(dis[i][goodi]>=DIS)continue;
+                //     int toUse=min(us_val[i],nos_val[goodi]);
+                //     us_val[i]-=toUse;
+                //     nos_val[goodi]-=toUse;
+                //     if(toUse){
+                //         userTo[i].push_back(make_pair(goodi,toUse));
+                //     }
+                // }
                 printf("round 1:\n");
                 for(int i=0;i<M;i++)
                     printf("%d ",us_val[i]);
@@ -512,37 +543,37 @@ vector<string>Sol(vector<int>users_val){
             }
         }
         outstrm.close();
-        //if(is_local){
-        //    printf("%d\n",T);
-        //    printf("tims:\n");
-        //    for(int i=0;i<N;i++)printf("%d ",nodes_tims[i]);
-        //    printf("\n");
-        //    ll totCost=0;
-        //    int pos95=ceil(T*95/100.0);
-        //    printf("pos %d\n",pos95);
-        //    for(int i=0;i<N;i++){
-        //        printf("node name:%s, random use time:%d, rudu:%d: ",nodes_name[i].c_str(),nodes_tims[i],rudu[i]);
-        //        vector<pair<int,int>>tmpCo;
-        //        for(int t=0;t<Co[i].size();t++){
-        //            tmpCo.push_back(make_pair(Co[i][t],t));
-        //        }
-        //        sort(tmpCo.begin(),tmpCo.end());
-        //        for(auto it:tmpCo)printf("%d %d, ",it.first,it.second);
-        //        printf("\n");
-        //        totCost+=tmpCo[pos95-1].first;
-        //        for(int t=4;t>=0;t--){
-        //            int uid=tmpCo[tmpCo.size()-t-1].second;
-        //            ll sum=0;
-        //            for(int j=0;j<M;j++)
-        //                if(dis[j][i]<DIS)sum+=G[uid][j];
-        //            printf("%lld %d , ",sum,uid);
-        //        }
-        //        printf("----------%d\n",tmpCo[pos95-1].first);
-        //    }
-        //    printf("cnttt %d\n",cnttt);
-        //    printf("cost %lld\n",totCost);
+         if(is_local){
+             printf("%d\n",T);
+             printf("tims:\n");
+             for(int i=0;i<N;i++)printf("%d ",nodes_tims[i]);
+             printf("\n");
+             ll totCost=0;
+             int pos95=ceil(T*95/100.0);
+             printf("pos %d\n",pos95);
+             for(int i=0;i<N;i++){
+                 printf("node name:%s, random use time:%d, rudu:%d: ",nodes_name[i].c_str(),nodes_tims[i],rudu[i]);
+                 vector<pair<int,int>>tmpCo;
+                 for(int t=0;t<Co[i].size();t++){
+                     tmpCo.push_back(make_pair(Co[i][t],t));
+                 }
+                 sort(tmpCo.begin(),tmpCo.end());
+                 for(auto it:tmpCo)printf("%d %d, ",it.first,it.second);
+                 printf("\n");
+                 totCost+=tmpCo[pos95-1].first;
+                 for(int t=4;t>=0;t--){
+                     int uid=tmpCo[tmpCo.size()-t-1].second;
+                     ll sum=0;
+                     for(int j=0;j<M;j++)
+                         if(dis[j][i]<DIS)sum+=G[uid][j];
+                     printf("%lld %d , ",sum,uid);
+                 }
+                 printf("----------%d\n",tmpCo[pos95-1].first);
+             }
+             printf("cnttt %d\n",cnttt);
+             printf("cost %lld\n",totCost);
 
-        //}
+         }
         return 0;
     }
 
