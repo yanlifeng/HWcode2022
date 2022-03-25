@@ -14,7 +14,7 @@
 #include <random>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
