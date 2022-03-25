@@ -265,11 +265,15 @@ vector<string>Sol(vector<int>users_val){
     for(int i=0;i<N;i++)
         if(nodes_tims[i]<Tlim)
             nodeSet.insert(i);
-
+    ll userSum=0;
+    for(int i=0;i<M;i++)
+        userSum+=us_val[i];
+    ll userSumNow=0;
     //=============================================================================
     //round1
     while(nodeSet.size()){
-        if(useNodes>=nodeALim)break;
+        if(userSumNow>=userSum*0.9)break;
+        //if(useNodes>=nodeALim)break;
         int done=1;
         for(int i=0;i<M;i++)
             if(us_val[i])done=0;
@@ -310,6 +314,7 @@ vector<string>Sol(vector<int>users_val){
             us_val[i]-=toUse;
             nos_val[goodi]-=toUse;
             nodesSum[i][goodi]+=toUse;
+            userSumNow+=toUse;
         }
     }
     printf("after round 1:\n");
