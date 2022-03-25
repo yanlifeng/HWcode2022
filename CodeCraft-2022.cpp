@@ -269,7 +269,7 @@ vector<string>Sol(vector<int>users_val){
     //=============================================================================
     //round1
     while(nodeSet.size()){
-        if(useNodes>=nodeALim)break;
+        //if(useNodes>=nodeALim)break;
         int done=1;
         for(int i=0;i<M;i++)
             if(us_val[i])done=0;
