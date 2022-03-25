@@ -206,7 +206,8 @@ ll SolMaxFlow(int limm){
         }
     }
     for(int i=0;i<N;i++){
-        addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
+        //addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
+        addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
         addEdge(Tn-1,i+M+1,0);
     }
     ll res=0;
@@ -265,15 +266,11 @@ vector<string>Sol(vector<int>users_val){
     for(int i=0;i<N;i++)
         if(nodes_tims[i]<Tlim)
             nodeSet.insert(i);
-    ll userSum=0;
-    for(int i=0;i<M;i++)
-        userSum+=us_val[i];
-    ll userSumNow=0;
+
     //=============================================================================
     //round1
     while(nodeSet.size()){
-        if(userSumNow>=userSum*0.9)break;
-        //if(useNodes>=nodeALim)break;
+        if(useNodes>=nodeALim)break;
         int done=1;
         for(int i=0;i<M;i++)
             if(us_val[i])done=0;
@@ -314,7 +311,6 @@ vector<string>Sol(vector<int>users_val){
             us_val[i]-=toUse;
             nos_val[goodi]-=toUse;
             nodesSum[i][goodi]+=toUse;
-            userSumNow+=toUse;
         }
     }
     printf("after round 1:\n");
@@ -329,16 +325,12 @@ vector<string>Sol(vector<int>users_val){
     for(int i=0;i<M;i++)tar+=us_val[i];
     int nodesMax=0;
     for(int i=0;i<M;i++)nodesMax=max(nodesMax,nos_val[i]);
-    int l=0,r=nodesMax,anspos=-1;
-    while (l<=r){
-        int mid=(l+r)/2;
-        ll res=0;
-        res= SolMaxFlow(mid);
-        if (res == tar){
-            r=mid-1;
-            anspos=mid;
-        }else{
-            l=mid+1;
+    int anspos=-1;
+    int delt=max(1,nodesMax/1000);
+    for(int limm=1;limm<=nodesMax;limm+=delt){
+        if(SolMaxFlow(limm)==tar){
+            anspos=limm;
+            break;
         }
     }
     assert(anspos!=-1);
@@ -467,4 +459,3 @@ int main() {
     }
     return 0;
 }
-
