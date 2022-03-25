@@ -188,7 +188,7 @@ const double nodesScale=nodesUp-nodesLow;
 bool user_cover[500];
 int user_cover_all;
 int user_cover_val;
-double ruduFac=0.5;
+double ruduFac=1.0;
 
 ll SolMaxFlow(int limm){
     num=0;
@@ -269,7 +269,7 @@ vector<string>Sol(vector<int>users_val){
     //=============================================================================
     //round1
     while(nodeSet.size()){
-        //if(useNodes>=nodeALim)break;
+        if(useNodes>=nodeALim)break;
         int done=1;
         for(int i=0;i<M;i++)
             if(us_val[i])done=0;
