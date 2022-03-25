@@ -206,8 +206,8 @@ ll SolMaxFlow(int limm){
         }
     }
     for(int i=0;i<N;i++){
-        //addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
-        addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
+        addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
+        //addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
         addEdge(Tn-1,i+M+1,0);
     }
     ll res=0;
@@ -326,7 +326,7 @@ vector<string>Sol(vector<int>users_val){
     int nodesMax=0;
     for(int i=0;i<M;i++)nodesMax=max(nodesMax,nos_val[i]);
     int anspos=-1;
-    int delt=max(1,nodesMax/1000);
+    int delt=max(1,nodesMax/2000);
     for(int limm=1;limm<=nodesMax;limm+=delt){
         if(SolMaxFlow(limm)==tar){
             anspos=limm;
