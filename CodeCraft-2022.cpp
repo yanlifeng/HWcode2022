@@ -181,7 +181,7 @@ ll Dfs(int now,ll nowflow){
 int nodes_tims[500];
 vector<int>nos_val;
 vector<int>us_val;
-const double nodesLow=0.95;
+const double nodesLow=0.8;
 const double nodesUp=0.95;
 double nodesNow=nodesLow;
 const double nodesScale=nodesUp-nodesLow;
