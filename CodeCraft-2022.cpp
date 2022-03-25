@@ -206,7 +206,7 @@ ll SolMaxFlow(int limm){
         }
     }
     for(int i=0;i<N;i++){
-        addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
+        addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
         addEdge(Tn-1,i+M+1,0);
     }
     ll res=0;
