@@ -326,7 +326,7 @@ vector<string>Sol(vector<int>users_val){
     int nodesMax=0;
     for(int i=0;i<M;i++)nodesMax=max(nodesMax,nos_val[i]);
     int anspos=-1;
-    int delt=max(1,nodesMax/2000);
+    int delt=max(1,nodesMax/nodesMax);
     for(int limm=1;limm<=nodesMax;limm+=delt){
         if(SolMaxFlow(limm)==tar){
             anspos=limm;
