@@ -15,7 +15,7 @@
 #include <assert.h>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -190,7 +190,7 @@ int user_cover_all;
 int user_cover_val;
 double ruduFac=0.5;
 
-ll SolMaxFlow(double limm){
+ll SolMaxFlow(int limm){
     num=0;
     for(int i=0;i<Tn;i++)head[i]=-1;
     for(int i=0;i<M;i++){
@@ -206,7 +206,7 @@ ll SolMaxFlow(double limm){
         }
     }
     for(int i=0;i<N;i++){
-        addEdge(i+M+1,Tn-1,max((int)limm*nos_val[i],min(nosMaxVal[i],nos_val[i])));
+        addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
         addEdge(Tn-1,i+M+1,0);
     }
     ll res=0;
@@ -321,20 +321,22 @@ vector<string>Sol(vector<int>users_val){
     //=============================================================================
     //round2
     ll tar=0;
-    for(int i=0;i<M;i++) tar+=us_val[i];
-    double l=0.00,r=1.00,anspos=1.0;
-    int midTimes=20;
-    while (midTimes--){
-        double mid = l+(r-l)*0.5;
+    for(int i=0;i<M;i++)tar+=us_val[i];
+    int nodesMax=0;
+    for(int i=0;i<M;i++)nodesMax=max(nodesMax,nos_val[i]);
+    int l=0,r=nodesMax,anspos=-1;
+    while (l<=r){
+        int mid=(l+r)/2;
         ll res=0;
         res= SolMaxFlow(mid);
         if (res == tar){
-            r=mid;
+            r=mid-1;
             anspos=mid;
         }else{
-            l=mid;
+            l=mid+1;
         }
     }
+    assert(anspos!=-1);
     ll res=SolMaxFlow(anspos);
     //=============================================================================
     //round3
