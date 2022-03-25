@@ -181,7 +181,7 @@ ll Dfs(int now,ll nowflow){
 int nodes_tims[500];
 vector<int>nos_val;
 vector<int>us_val;
-const double nodesLow=0.9;
+const double nodesLow=0.95;
 const double nodesUp=0.95;
 double nodesNow=nodesLow;
 const double nodesScale=nodesUp-nodesLow;
@@ -326,7 +326,7 @@ vector<string>Sol(vector<int>users_val){
     int nodesMax=0;
     for(int i=0;i<M;i++)nodesMax=max(nodesMax,nos_val[i]);
     int anspos=-1;
-    int delt=max(1,nodesMax/nodesMax);
+    int delt=max(1,nodesMax/2000);
     for(int limm=1;limm<=nodesMax;limm+=delt){
         if(SolMaxFlow(limm)==tar){
             anspos=limm;
