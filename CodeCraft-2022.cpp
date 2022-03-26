@@ -15,7 +15,7 @@
 #include <assert.h>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -180,7 +180,7 @@ ll Dfs(int now,ll nowflow){
     return totflow;
 }
 int nodes_tims[500];
-double ruduFac=1.0;
+double ruduFac=2.0;
 
 ll SolMaxFlow(int limm,vector<int>us_val,vector<int>nos_val){
     num=0;
@@ -299,7 +299,7 @@ int Round2(int tid,vector<int>&us_val,vector<int>&nos_val){
     for(int j=0;j<N;j++)
         nodesMax=max(nodesMax,nos_val[j]);
     int anspos=-1;
-    int delt=max(1,nodesMax/4000);
+    int delt=max(1,nodesMax/10000);
     for(int limm=1;limm<=nodesMax;limm+=delt){
         if(SolMaxFlow(limm,us_val,nos_val)==tar){
             anspos=limm;
