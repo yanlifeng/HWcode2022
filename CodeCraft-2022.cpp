@@ -299,7 +299,7 @@ int Round2(int tid,vector<int>&us_val,vector<int>&nos_val){
     for(int j=0;j<N;j++)
         nodesMax=max(nodesMax,nos_val[j]);
     int anspos=-1;
-    int delt=max(1,nodesMax/100000);
+    int delt=max(1,nodesMax/10000);
     for(int limm=1;limm<=nodesMax;limm+=delt){
         if(SolMaxFlow(limm,us_val,nos_val)==tar){
             anspos=limm;
@@ -425,7 +425,7 @@ int main() {
         Tis.push_back(make_pair(-sum,tt));
     }
     sort(Tis.begin(),Tis.end());
-    for(int tt=0;tt<T;tt++){
+    for(int tt=T-1;tt>=0;tt--){
         int tid=Tis[tt].second;
         int ok=1;
         for(auto it:G[tid])if(it)ok=0;
