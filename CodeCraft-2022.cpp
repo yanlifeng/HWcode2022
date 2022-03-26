@@ -153,7 +153,7 @@ bool Bfs(){
         for(int i=head[now];i!=-1;i=e[i].pre){
             Ei.push_back(i);
         }
-        random_shuffle ( Ei.begin(), Ei.end() );
+        //random_shuffle ( Ei.begin(), Ei.end() );
         for(auto i:Ei){
             if(e[i].t>0&&ord[e[i].v]==-1){
                 Q.push(e[i].v);
@@ -182,25 +182,37 @@ ll Dfs(int now,ll nowflow){
 int nodes_tims[500];
 double ruduFac=1.0;
 
+vector<int>tmp_users;
+vector<int>tmp_nodes;
 ll SolMaxFlow(int limm,vector<int>us_val,vector<int>nos_val){
     num=0;
     for(int i=0;i<Tn;i++)head[i]=-1;
+    for(int i=0;i<M;i++)
+        tmp_users[i]=i;
+    for(int i=0;i<N;i++)
+        tmp_nodes[i]=i;
+    //random_shuffle(tmp_users.begin(),tmp_users.end());
+    //random_shuffle(tmp_nodes.begin(),tmp_nodes.end());
     for(int i=0;i<M;i++){
-        addEdge(0,i+1,us_val[i]);
-        addEdge(i+1,0,0);
+        int uid=tmp_users[i];
+        addEdge(0,uid+1,us_val[uid]);
+        addEdge(uid+1,0,0);
     }
     for(int i=0;i<M;i++){
         for(int j=0;j<N;j++){
-            if(dis[i][j]<DIS){
-                addEdge(i+1,j+M+1,us_val[i]);
-                addEdge(j+M+1,i+1,0);
+            int uid=tmp_users[i];
+            int nid=tmp_nodes[j];
+            if(dis[uid][nid]<DIS){
+                addEdge(uid+1,nid+M+1,us_val[uid]);
+                addEdge(nid+M+1,uid+1,0);
             }
         }
     }
     for(int i=0;i<N;i++){
-        addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
+        int nid=tmp_nodes[i];
+        addEdge(nid+M+1,Tn-1,max(min(nos_val[nid],nosMaxVal[nid]),min(limm,nos_val[nid])));
         //addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
-        addEdge(Tn-1,i+M+1,0);
+        addEdge(Tn-1,nid+M+1,0);
     }
     ll res=0;
     while(Bfs()){
@@ -212,21 +224,31 @@ ll SolMaxFlow(int limm,vector<int>us_val,vector<int>nos_val){
 ll SolMaxFlowNoLimit(vector<int>us_val,vector<int>nos_val){
     num=0;
     for(int i=0;i<Tn;i++)head[i]=-1;
+    for(int i=0;i<M;i++)
+        tmp_users[i]=i;
+    for(int i=0;i<N;i++)
+        tmp_nodes[i]=i;
+    //random_shuffle(tmp_users.begin(),tmp_users.end());
+    //random_shuffle(tmp_nodes.begin(),tmp_nodes.end());
     for(int i=0;i<M;i++){
-        addEdge(0,i+1,us_val[i]);
-        addEdge(i+1,0,0);
+        int uid=tmp_users[i];
+        addEdge(0,uid+1,us_val[uid]);
+        addEdge(uid+1,0,0);
     }
     for(int i=0;i<M;i++){
         for(int j=0;j<N;j++){
-            if(dis[i][j]<DIS){
-                addEdge(i+1,j+M+1,us_val[i]);
-                addEdge(j+M+1,i+1,0);
+            int uid=tmp_users[i];
+            int nid=tmp_nodes[j];
+            if(dis[uid][nid]<DIS){
+                addEdge(uid+1,nid+M+1,us_val[uid]);
+                addEdge(nid+M+1,uid+1,0);
             }
         }
     }
     for(int i=0;i<N;i++){
-        addEdge(i+M+1,Tn-1,nos_val[i]);
-        addEdge(Tn-1,i+M+1,0);
+        int nid=tmp_nodes[i];
+        addEdge(nid+M+1,Tn-1,nos_val[nid]);
+        addEdge(Tn-1,nid+M+1,0);
     }
     ll res=0;
     while(Bfs()){
@@ -299,15 +321,17 @@ int Round2(int tid,vector<int>&us_val,vector<int>&nos_val){
     for(int j=0;j<N;j++)
         nodesMax=max(nodesMax,nos_val[j]);
     int anspos=-1;
-    int delt=max(1,nodesMax/1000);
+    int delt=max(1,nodesMax/20000);
     for(int limm=1;limm<=nodesMax;limm+=delt){
         if(SolMaxFlow(limm,us_val,nos_val)==tar){
             anspos=limm;
             break;
         }
     }
-    assert(anspos!=-1);
-    ll res=SolMaxFlow(anspos,us_val,nos_val);
+    //assert(anspos!=-1);
+    ll res=0;
+    if(anspos!=-1)
+        res=SolMaxFlow(anspos,us_val,nos_val);
     //=============================================================================
     //round3
     if(res!=tar){
@@ -324,8 +348,6 @@ int Round2(int tid,vector<int>&us_val,vector<int>&nos_val){
                 int nid=e[i].v-1-M;
                 int toUse=e[i^1].t;
                 nosMaxVal[nid]=max(nosMaxVal[nid],toUse);
-                assert(toUse<=us_val[uid]);
-                assert(toUse<=nos_val[nid]);
                 nodesSumGol[tid][uid][nid]+=toUse;
                 us_val[uid]-=toUse;
                 nos_val[nid]-=toUse;
@@ -348,6 +370,9 @@ int main() {
     //however, how to process no solution ?
     std::srand ( unsigned ( std::time(0) ) );
     inputData();
+    for(int i=0;i<M;i++)tmp_users.push_back(i);
+    for(int i=0;i<N;i++)tmp_nodes.push_back(i);
+
     Tn=N+M+2;
     printf("M:%d,N:%d\n\n",M,N);
     printf("chu du:\n");
