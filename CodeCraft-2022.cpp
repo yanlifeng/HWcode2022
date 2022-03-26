@@ -15,7 +15,7 @@
 #include <assert.h>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=0;
+const bool is_local=1;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -198,8 +198,8 @@ ll SolMaxFlow(int limm,vector<int>us_val,vector<int>nos_val){
         }
     }
     for(int i=0;i<N;i++){
-        addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
-        //addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
+        //addEdge(i+M+1,Tn-1,max(min(nos_val[i],nosMaxVal[i]),min(limm,nos_val[i])));
+        addEdge(i+M+1,Tn-1,min(limm,nos_val[i]));
         addEdge(Tn-1,i+M+1,0);
     }
     ll res=0;
@@ -260,13 +260,11 @@ int Round1(int tid,vector<int>&us_val,vector<int>&nos_val){
     if(totSumMax==0)return 1;
     int ii=0;
     for(auto j:nodeSet){
-        //tmpNodes.push_back(make_pair(-(1.0*totSums[ii++]/totSumMax+ruduFac*(1.0*(N-rudu[j])/N)),j));
-        tmpNodes.push_back(make_pair(-1.0*totSums[ii++],j));
+        tmpNodes.push_back(make_pair(-(1.0*totSums[ii++]/totSumMax+ruduFac*(1.0*(N-rudu[j])/N)),j));
     }
     sort(tmpNodes.begin(),tmpNodes.end());
     int goodi=tmpNodes[0].second;
-    //if(-tmpNodes[0].first==ruduFac*(1.0*(N-rudu[goodi])/N))return 1;
-    if(-tmpNodes[0].first==0)return 1;
+    if(-tmpNodes[0].first==ruduFac*(1.0*(N-rudu[goodi])/N))return 1;
     nodes_tims[goodi]++;
     printf("this round get goodi %d, use %.4f\n",goodi,tmpNodes[0].first);
     vector<pair<int,int>> tmpUserNode;
