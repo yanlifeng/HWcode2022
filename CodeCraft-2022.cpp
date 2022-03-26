@@ -15,7 +15,7 @@
 #include <assert.h>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -43,8 +43,8 @@ void inputData(){
     string in_path;
     if(is_local){
         //in_path="/Users/ylf9811/Downloads/huaweicode2022/smallData/";
-        //in_path="/Users/ylf9811/data_45/data3_4/";
-        in_path="/Users/ylf9811/data_45/data/";
+        in_path="/Users/ylf9811/data_45/data3_4/";
+        //in_path="/Users/ylf9811/data_45/data/";
     }else{
         in_path="/data/";
     }
@@ -260,11 +260,13 @@ int Round1(int tid,vector<int>&us_val,vector<int>&nos_val){
     if(totSumMax==0)return 1;
     int ii=0;
     for(auto j:nodeSet){
-        tmpNodes.push_back(make_pair(-(1.0*totSums[ii++]/totSumMax+ruduFac*(1.0*(N-rudu[j])/N)),j));
+        //tmpNodes.push_back(make_pair(-(1.0*totSums[ii++]/totSumMax+ruduFac*(1.0*(N-rudu[j])/N)),j));
+        tmpNodes.push_back(make_pair(-1.0*totSums[ii++],j));
     }
     sort(tmpNodes.begin(),tmpNodes.end());
     int goodi=tmpNodes[0].second;
-    if(-tmpNodes[0].first==ruduFac*(1.0*(N-rudu[goodi])/N))return 1;
+    //if(-tmpNodes[0].first==ruduFac*(1.0*(N-rudu[goodi])/N))return 1;
+    if(-tmpNodes[0].first==0)return 1;
     nodes_tims[goodi]++;
     printf("this round get goodi %d, use %.4f\n",goodi,tmpNodes[0].first);
     vector<pair<int,int>> tmpUserNode;
