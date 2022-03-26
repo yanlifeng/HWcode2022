@@ -15,7 +15,7 @@
 #include <assert.h>
 #define ll long long
 const bool is_debug=0;
-const bool is_local=0;
+const bool is_local=1;
 using namespace std;
 map<string,int>mp_users;
 string users_name[500];
@@ -283,6 +283,74 @@ int Round1(int tid,vector<int>&us_val,vector<int>&nos_val){
     return 2;
 }
 
+int newRound2(int tid,vector<int>&us_val,vector<int>&nos_val){
+    ll tar=0;
+    for(int i=0;i<M;i++)
+        tar+=us_val[i];
+    if(tar==0)return 1;
+
+    vector<int>tmp_us_val;
+    for(auto it:us_val)tmp_us_val.push_back(it);
+    vector<int>tmp_nos_val;
+    for(auto it:nos_val)tmp_nos_val.push_back(it);
+    int tmpAns[500][500];
+    for(int i=0;i<M;i++)
+        for(int j=0;j<N;j++)
+            tmpAns[i][j]=0;
+    for(int i=0;i<M;i++){
+        if(us_val[i]){
+            vector<pair<int,int>>randids;
+            for(int j=0;j<N;j++)randids.push_back(make_pair(-rudu[j],j));
+            sort(randids.begin(),randids.end());
+            for(auto it:randids){
+                int j=it.second;
+                if(dis[i][j]>=DIS||nos_val[j]==0)continue;
+                int toUse=min(us_val[i],nos_val[j]);
+                us_val[i]-=toUse;
+                nos_val[j]-=toUse;
+                tmpAns[i][j]+=toUse;
+                if(us_val[i]==0)break;
+            }
+        }
+    }
+    int ok=1;
+    for(int i=0;i<M;i++)
+        if(us_val[i])ok=0;
+    if(ok){
+        for(int i=0;i<M;i++)
+            for(int j=0;j<N;j++)
+                nodesSumGol[tid][i][j]+=tmpAns[i][j];
+        return 1;
+    }
+
+    //=================================================
+    //round3
+    for(int i=0;i<M;i++)us_val[i]=tmp_us_val[i];
+    for(int i=0;i<N;i++)nos_val[i]=tmp_nos_val[i];
+    printf("roud12 failed, now rerun MacFlow!\n");
+    ll res=SolMaxFlowNoLimit(us_val,nos_val);
+    printf("round3 done, %lld %lld\n",tar,res);
+    assert(res==tar);
+    if(res!=tar)return 0;
+    for(int u=0;u<M;u++){
+        for(int i=head[u+1];i!=-1;i=e[i].pre){
+            if(e[i^1].t>0){
+                int uid=u;
+                int nid=e[i].v-1-M;
+                int toUse=e[i^1].t;
+                nosMaxVal[nid]=max(nosMaxVal[nid],toUse);
+                assert(toUse<=us_val[uid]);
+                assert(toUse<=nos_val[nid]);
+                nodesSumGol[tid][uid][nid]+=toUse;
+                us_val[uid]-=toUse;
+                nos_val[nid]-=toUse;
+            }
+        }
+    }
+    return 1;
+
+}
+
 int Round2(int tid,vector<int>&us_val,vector<int>&nos_val){
 
     //printf("us_val : ");
@@ -431,7 +499,7 @@ int main() {
         for(auto it:G[tid])if(it)ok=0;
         if(ok==1)continue;
         printf("round2 process day %d %d\n",tid,tt);
-        int res=Round2(tid,G[tid],NG[tid]);
+        int res=newRound2(tid,G[tid],NG[tid]);
         assert(res==1);
     }
     //=====================================================
