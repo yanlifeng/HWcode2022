@@ -14,7 +14,7 @@
 #include <random>
 #include <assert.h>
 #define ll long long
-const bool is_local=1;
+const bool is_local=0;
 using namespace std;
 int N,M,T,V,DIS,Nflows[9000];
 int dis[500][500];
@@ -40,7 +40,7 @@ vector<string> splitByCom(string data,char c){
 void inputData(){
     string in_path;
     if(is_local){
-        in_path="/Users/ylf9811/Downloads/hw_round2/data/";
+        in_path="/home/old_home/ylf/hwbaba/data/";
     }else{
         in_path="/data/";
     }
@@ -161,10 +161,12 @@ void inputData(){
 void baselineSolve(){
     ofstream outstrm;
     if(is_local){
-        outstrm.open("/Users/ylf9811/Downloads/hw_round2/output/solution.txt");
+        outstrm.open("/home/old_home/ylf/hwbaba/output/solution.txt");
     }else{
         outstrm.open("/output/solution.txt");
     }
+    for(int i=0;i<9;i++)outstrm<<nodes_name[i]<<",";
+    outstrm<<nodes_name[9]<<endl;
     int nos_val[500];
     int us_val[40][110];
 
